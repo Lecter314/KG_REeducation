@@ -1,0 +1,62 @@
+# 导入goal节点
+LOAD CSV WITH HEADERS  FROM "file:///REeduC/goal.csv" AS line
+MERGE (g:goal{goal_id:line.goal_id,training_object:line.training_object,label:line.label})
+
+#删除goal节点
+MATCH (n:goal{label:"goal"})
+delete n
+
+#导入university节点
+LOAD CSV WITH HEADERS  FROM "file:///REeduC/university.csv" AS line
+MERGE (u:university{university_id:line.university_id,university_name:line.university_name,country:line.country,label:line.label})
+
+#删除university节点
+MATCH (n:university{label:"university"})
+delete n
+
+#导入relation_goal，创建关系
+LOAD CSV WITH HEADERS FROM "file:///REeduC/relation_goal.csv" AS line
+MATCH (from:university{university_id:line.start_id})
+MATCH (to:goal{goal_id:line.end_id})
+CREATE (from)-[relation_label_goal:relation_goal{degree:line.degree,type:line.type}]->(to)
+RETURN relation_label_goal
+
+#删除relation_goal关系
+MATCH (n:goal)<-[r:relation_goal]-(m:university) DELETE r
+
+#查找goal为“管理基础知识”的大学
+MATCH p=(goal{training_object:'管理基础知识'})<-[:relation_goal]-() return p
+
+#导入main_subject节点
+LOAD CSV WITH HEADERS  FROM "file:///REeduC/main_subject.csv" AS line
+MERGE (m:main_subject{subject_id:line.subject_id,main_subject:line.main_subject})
+
+
+#导入relation_subject，创建关系
+LOAD CSV WITH HEADERS FROM "file:///REeduC/relation_subject.csv" AS line
+MATCH (from:university{university_id:line.start_id})
+MATCH (to:main_subject{subject_id:line.end_id})
+CREATE (from)-[relation_label_subject:relation_subject{degree:line.degree,type:line.type}]->(to)
+RETURN relation_label_subject
+
+#导入main_course节点
+LOAD CSV WITH HEADERS  FROM "file:///REeduC/main_course.csv" AS line
+MERGE (m:main_course{course_id:line.course_id,main_course:line.main_course})
+
+#导入relation_course，创建关系
+LOAD CSV WITH HEADERS FROM "file:///REeduC/relation_course.csv" AS line
+MATCH (from:university{university_id:line.start_id})
+MATCH (to:main_course{course_id:line.end_id})
+CREATE (from)-[relation_label_course:relation_course{degree:line.degree,type:line.type}]->(to)
+RETURN relation_label_course
+
+##导入career节点
+LOAD CSV WITH HEADERS  FROM "file:///REeduC/career.csv" AS line
+MERGE (c:career{career_id:line.career_id,career_object:line.career_object,label:line.label})
+
+#导入relation_career，创建关系
+LOAD CSV WITH HEADERS FROM "file:///REeduC/relation_career.csv" AS line
+MATCH (from:university{university_id:line.start_id})
+MATCH (to:career{career_id:line.end_id})
+CREATE (from)-[relation_label_career:relation_career{degree:line.degree,type:line.type}]->(to)
+RETURN relation_label_career
